@@ -1,0 +1,12 @@
+{
+  "name": "ecohub",
+  "version": "1.0.0",
+  "description": "EcoHub - AI Sustainable Farm Management Platform",
+  "scripts": {
+    "server": "npm --prefix server start",
+    "server:dev": "npm --prefix server run dev",
+    "client": "npm --prefix client dev",
+    "build": "npm --prefix client run build",
+    "seed": "npm --prefix server run seed"
+  }
+}
