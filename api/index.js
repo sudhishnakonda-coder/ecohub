@@ -22,6 +22,20 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Initialize Database connection on first request (must be before routes)
+let initialized = false;
+app.use(async (req, res, next) => {
+  if (!initialized) {
+    try {
+      await initDatabase();
+      initialized = true;
+    } catch (e) {
+      console.error('[Vercel DB Init Error]', e);
+    }
+  }
+  next();
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/advisor', advisorRoutes);
@@ -36,20 +50,6 @@ app.use('/api/dashboard', dashboardRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', app: 'EcoHub AI Sustainable Farm Platform', timestamp: new Date() });
-});
-
-// Initialize Database connection on request
-let initialized = false;
-app.use(async (req, res, next) => {
-  if (!initialized) {
-    try {
-      await initDatabase();
-      initialized = true;
-    } catch (e) {
-      console.error('[Vercel DB Init Error]', e);
-    }
-  }
-  next();
 });
 
 export default app;
