@@ -13,6 +13,7 @@ export default function AIAdvisor() {
   const [recommendation, setRecommendation] = useState(null);
   const [history, setHistory] = useState([]);
   const [activeTab, setActiveTab] = useState('advisor'); // 'advisor' | 'history'
+  const [error, setError] = useState(null);
 
   const presets = [
     { crop: 'Wheat', soil: 'Loamy Soil', stage: 'Vegetative Stage' },
@@ -39,6 +40,7 @@ export default function AIAdvisor() {
   const handleGenerate = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     try {
       const res = await api.post('/advisor', {
         crop,
@@ -50,6 +52,8 @@ export default function AIAdvisor() {
       setRecommendation(res.data.ai_response);
       fetchHistory();
     } catch (err) {
+      const msg = err.response?.data?.error || 'Failed to generate recommendation. Please try again.';
+      setError(msg);
       console.error(err);
     } finally {
       setLoading(false);
@@ -215,6 +219,11 @@ export default function AIAdvisor() {
 
           {/* AI Output Display Panel */}
           <div className="lg:col-span-7 space-y-4">
+            {error && (
+              <div className="p-4 rounded-2xl bg-red-950/40 border border-red-500/40 text-red-300 text-xs font-medium animate-fade-in">
+                ⚠️ {error}
+              </div>
+            )}
             {recommendation ? (
               <div className="space-y-4 animate-fade-in">
                 {/* Header Summary */}

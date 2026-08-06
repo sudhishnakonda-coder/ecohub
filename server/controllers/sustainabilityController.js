@@ -7,8 +7,8 @@ export async function getSustainabilityMetrics(req, res) {
     // Fetch user farms count & recommendations count to dynamically calculate sustainability metrics
     const farmsRes = await query('SELECT * FROM farms WHERE user_id = ?', [userId]);
     const recsRes = await query('SELECT COUNT(*) as count FROM recommendations WHERE user_id = ?', [userId]);
-    const mBookingsRes = await query('SELECT COUNT(*) as count FROM machine_bookings WHERE user_id = ? AND status = "confirmed"', [userId]);
-    const sBookingsRes = await query('SELECT COUNT(*) as count FROM storage_bookings WHERE user_id = ? AND status = "confirmed"', [userId]);
+    const mBookingsRes = await query("SELECT COUNT(*) as count FROM machine_bookings WHERE user_id = ? AND status = 'confirmed'", [userId]);
+    const sBookingsRes = await query("SELECT COUNT(*) as count FROM storage_bookings WHERE user_id = ? AND status = 'confirmed'", [userId]);
 
     const farmCount = farmsRes.rows.length || 1;
     const recCount = parseInt(recsRes.rows[0]?.count || 0);

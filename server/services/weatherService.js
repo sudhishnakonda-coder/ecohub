@@ -1,16 +1,35 @@
 import axios from 'axios';
 
+// Strip common non-city suffixes to get a real city name for the OpenWeather API
+function extractCityName(location) {
+  if (!location) return 'Hyderabad';
+  
+  // Remove common farm/hub/sector suffixes
+  let city = location
+    .replace(/\b(farm|agro hub|rural sector|farm center|agri|hub|sector|center|centre|field|village|mandal|tehsil|district)\b/gi, '')
+    .replace(/[^a-zA-Z\s,]/g, '')
+    .trim();
+  
+  // If after stripping we have nothing meaningful, use Hyderabad as default
+  if (!city || city.length < 3) {
+    city = 'Hyderabad';
+  }
+  
+  return city;
+}
+
 export async function getWeatherForLocation(location = 'Hyderabad') {
   const apiKey = process.env.OPENWEATHER_API_KEY;
+  const cityName = extractCityName(location);
 
   if (apiKey && apiKey.trim() !== '') {
     try {
       const response = await axios.get(
-        `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(location)}&units=metric&appid=${apiKey}`
+        `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(cityName)}&units=metric&appid=${apiKey}`
       );
       const data = response.data;
       return {
-        location: data.name,
+        location: location,
         temp: Math.round(data.main.temp),
         temp_min: Math.round(data.main.temp_min),
         temp_max: Math.round(data.main.temp_max),
@@ -22,7 +41,7 @@ export async function getWeatherForLocation(location = 'Hyderabad') {
         rain_probability: data.rain ? Math.min(100, Math.round(data.rain['1h'] * 20 || 30)) : 10
       };
     } catch (err) {
-      console.warn('[Weather Service] OpenWeather API error, using smart synthesis:', err.message);
+      console.warn(`[Weather Service] OpenWeather API error for "${cityName}" (from "${location}"):`, err.message);
     }
   }
 

@@ -96,13 +96,13 @@ export async function bookColdStorage(req, res) {
     // Create Calendar event automatically for the storage reservation
     await query(
       'INSERT INTO calendar_events (user_id, title, date, type, description) VALUES (?, ?, ?, ?, ?)',
-      [userId, `Cold Storage: ${storage.name}`, booking_date, 'Cold Storage', `Reserved ${quantity_tons} tons for ${duration_days} days at ${storage.name}`]
+      [userId, `Storage: ${storage.name}`.substring(0, 255), booking_date, 'Cold Storage', `Reserved ${quantity_tons} tons for ${duration_days} days at ${storage.name}`]
     );
 
     // Create Notification
     await query(
       'INSERT INTO notifications (user_id, title, message, type) VALUES (?, ?, ?, ?)',
-      [userId, `Storage Reserved: ${storage.name}`, `Reserved ${quantity_tons} Tons space starting ${booking_date} for ${duration_days} days.`, 'success']
+      [userId, `Reserved: ${storage.name}`.substring(0, 255), `Reserved ${quantity_tons} Tons space starting ${booking_date} for ${duration_days} days.`, 'success']
     );
 
     return res.status(201).json({

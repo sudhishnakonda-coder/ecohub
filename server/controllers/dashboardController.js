@@ -20,7 +20,7 @@ export async function getDashboardData(req, res) {
     // Upcoming calendar events
     const todayStr = new Date().toISOString().split('T')[0];
     const eventsRes = await query(
-      'SELECT * FROM calendar_events WHERE user_id = ? AND date >= ? ORDER BY date ASC LIMIT 5',
+      "SELECT * FROM calendar_events WHERE user_id = ? AND date >= ? ORDER BY date ASC LIMIT 5",
       [userId, todayStr]
     );
 
@@ -35,9 +35,9 @@ export async function getDashboardData(req, res) {
       latestRecommendation = typeof row.ai_response === 'string' ? JSON.parse(row.ai_response) : row.ai_response;
     }
 
-    // Active Bookings summary
-    const mBookingsRes = await query('SELECT COUNT(*) as count FROM machine_bookings WHERE user_id = ? AND status = "confirmed"', [userId]);
-    const sBookingsRes = await query('SELECT COUNT(*) as count FROM storage_bookings WHERE user_id = ? AND status = "confirmed"', [userId]);
+    // Active Bookings summary — use single-quoted strings for Supabase compatibility
+    const mBookingsRes = await query("SELECT COUNT(*) as count FROM machine_bookings WHERE user_id = ? AND status = 'confirmed'", [userId]);
+    const sBookingsRes = await query("SELECT COUNT(*) as count FROM storage_bookings WHERE user_id = ? AND status = 'confirmed'", [userId]);
 
     // Notifications count unread
     const notifsRes = await query('SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = false', [userId]);

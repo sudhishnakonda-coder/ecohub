@@ -76,39 +76,43 @@ export async function createRecommendation(req, res) {
 
     // Optional auto-schedule smart calendar events
     if (auto_schedule !== false) {
-      const today = new Date();
-      const formatDaysOut = (days) => {
-        const d = new Date(today);
-        d.setDate(d.getDate() + days);
-        return d.toISOString().split('T')[0];
-      };
+      try {
+        const today = new Date();
+        const formatDaysOut = (days) => {
+          const d = new Date(today);
+          d.setDate(d.getDate() + days);
+          return d.toISOString().split('T')[0];
+        };
 
-      // Create calendar entries based on advice
-      await query(
-        'INSERT INTO calendar_events (user_id, title, date, type, description) VALUES (?, ?, ?, ?, ?)',
-        [userId, `Irrigation: ${crop}`, formatDaysOut(1), 'Irrigation', aiOutput.irrigation]
-      );
+        // Truncate type values to be safe for VARCHAR(50)
+        await query(
+          'INSERT INTO calendar_events (user_id, title, date, type, description) VALUES (?, ?, ?, ?, ?)',
+          [userId, `Irrigation: ${crop}`.substring(0, 255), formatDaysOut(1), 'Irrigation', (aiOutput.irrigation || '').substring(0, 5000)]
+        );
 
-      await query(
-        'INSERT INTO calendar_events (user_id, title, date, type, description) VALUES (?, ?, ?, ?, ?)',
-        [userId, `Fertilizer Application: ${crop}`, formatDaysOut(3), 'Fertilizer', aiOutput.fertilizer]
-      );
+        await query(
+          'INSERT INTO calendar_events (user_id, title, date, type, description) VALUES (?, ?, ?, ?, ?)',
+          [userId, `Fertilizer: ${crop}`.substring(0, 255), formatDaysOut(3), 'Fertilizer', (aiOutput.fertilizer || '').substring(0, 5000)]
+        );
 
-      await query(
-        'INSERT INTO calendar_events (user_id, title, date, type, description) VALUES (?, ?, ?, ?, ?)',
-        [userId, `Pest Inspection: ${crop}`, formatDaysOut(7), 'Pest Inspection', aiOutput.pest_control]
-      );
+        await query(
+          'INSERT INTO calendar_events (user_id, title, date, type, description) VALUES (?, ?, ?, ?, ?)',
+          [userId, `Pest Check: ${crop}`.substring(0, 255), formatDaysOut(7), 'Pest Control', (aiOutput.pest_control || '').substring(0, 5000)]
+        );
 
-      await query(
-        'INSERT INTO calendar_events (user_id, title, date, type, description) VALUES (?, ?, ?, ?, ?)',
-        [userId, `Target Harvest Window: ${crop}`, formatDaysOut(30), 'Harvest', aiOutput.harvest]
-      );
+        await query(
+          'INSERT INTO calendar_events (user_id, title, date, type, description) VALUES (?, ?, ?, ?, ?)',
+          [userId, `Harvest: ${crop}`.substring(0, 255), formatDaysOut(30), 'Harvest', (aiOutput.harvest || '').substring(0, 5000)]
+        );
 
-      // Create Notification
-      await query(
-        'INSERT INTO notifications (user_id, title, message, type) VALUES (?, ?, ?, ?)',
-        [userId, `AI Crop Strategy Generated for ${crop}`, `Smart irrigation, fertilizer, and pest control tasks added to your Smart Calendar.`, 'success']
-      );
+        // Create Notification
+        await query(
+          'INSERT INTO notifications (user_id, title, message, type) VALUES (?, ?, ?, ?)',
+          [userId, `AI Strategy: ${crop}`, `Smart irrigation, fertilizer, and pest control tasks added to your Smart Calendar.`, 'success']
+        );
+      } catch (scheduleErr) {
+        console.warn('[Advisor] Auto-schedule error (non-blocking):', scheduleErr.message);
+      }
     }
 
     return res.status(201).json({
@@ -124,6 +128,6 @@ export async function createRecommendation(req, res) {
     });
   } catch (err) {
     console.error('createRecommendation error:', err);
-    return res.status(500).json({ error: 'Failed to generate AI advice' });
+    return res.status(500).json({ error: 'Failed to generate AI advice: ' + err.message });
   }
 }

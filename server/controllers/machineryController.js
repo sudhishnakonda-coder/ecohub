@@ -98,13 +98,13 @@ export async function bookMachine(req, res) {
     // Create Calendar event automatically for the booking
     await query(
       'INSERT INTO calendar_events (user_id, title, date, type, description) VALUES (?, ?, ?, ?, ?)',
-      [userId, `Machinery: ${machine.machine_name}`, booking_date, 'Machinery Booking', `Booked ${machine.machine_name} from ${machine.owner} at $${price}/day`]
+      [userId, `Machinery: ${machine.machine_name}`.substring(0, 255), booking_date, 'Machinery', `Booked ${machine.machine_name} from ${machine.owner} at $${price}/day`]
     );
 
     // Create Notification
     await query(
       'INSERT INTO notifications (user_id, title, message, type) VALUES (?, ?, ?, ?)',
-      [userId, `Booking Confirmed: ${machine.machine_name}`, `Your reservation for ${machine.machine_name} on ${booking_date} is confirmed!`, 'success']
+      [userId, `Booked: ${machine.machine_name}`.substring(0, 255), `Your reservation for ${machine.machine_name} on ${booking_date} is confirmed!`, 'success']
     );
 
     return res.status(201).json({
