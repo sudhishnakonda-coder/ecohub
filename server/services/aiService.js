@@ -28,23 +28,30 @@ Return ONLY a valid JSON object matching this exact structure with detailed, act
 Do not include markdown code block markers or extra conversational text outside the raw JSON object.
 `;
 
-  if (apiKey && apiKey.trim() !== '') {
-    try {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-      const result = await model.generateContent(prompt);
-      const responseText = result.response.text();
+  if (apiKey && apiKey.trim() !== '' && !apiKey.startsWith('AQ.')) {
+    const modelsToTry = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash'];
+    for (const modelName of modelsToTry) {
+      try {
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(prompt);
+        const responseText = result.response.text();
 
-      // Clean string if wrapped in markdown code blocks
-      const cleanJson = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
-      const parsed = JSON.parse(cleanJson);
-      return parsed;
-    } catch (err) {
-      console.warn('[AI Service] Gemini API call error, falling back to Agronomy Engine:', err.message);
+        // Extract JSON string from response
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          if (parsed.irrigation && parsed.fertilizer) {
+            return parsed;
+          }
+        }
+      } catch (err) {
+        console.warn(`[AI Service] Model ${modelName} call notice:`, err.message);
+      }
     }
   }
 
-  // Smart fallback agronomy engine when API key is missing or quota is limited
+  // Smart fallback agronomy engine guaranteeing valid output for any crop/location
   return generateFallbackRecommendation(crop, location, soil_type, crop_stage, weather);
 }
 
@@ -57,7 +64,7 @@ function generateFallbackRecommendation(crop, location, soil_type, crop_stage, w
   let fertilizer = `Apply balanced NPK (10-26-26) at 45 kg/acre. Supplement with organic vermicompost (200 kg/acre) to enrich soil microbiota during the ${crop_stage} stage.`;
   let harvest = `Harvest in approximately 25-35 days when lower leaves begin yellowing and moisture content stabilizes below 18%. Store immediately in dry cold storage at 4°C-8°C.`;
   let pest_control = `Monitor for aphid and stem borer activity. Apply neem oil solution (5ml/L water) as an organic preventive spray every 10 days.`;
-  
+
   if (cropLower.includes('rice') || cropLower.includes('paddy')) {
     irrigation = `Maintain 3-5 cm standing water layer during tillering; drain 10 days prior to harvest to ensure uniform ripening.`;
     fertilizer = `Split application: Apply Urea in 3 equal doses (basal, active tillering, and panicle initiation stage).`;
@@ -68,6 +75,10 @@ function generateFallbackRecommendation(crop, location, soil_type, crop_stage, w
     pest_control = `Watch for yellow rust. Spray Propiconazole 25% EC at first sign of infestation.`;
   } else if (cropLower.includes('cotton')) {
     pest_control = `High risk of pink bollworm. Install pheromone traps (4-5 per acre) and spray Spinosad if threshold exceeds 8 moths/trap/night.`;
+  } else if (cropLower.includes('tomato')) {
+    irrigation = `Drip irrigate 2-3 liters per plant daily. Avoid overhead wetting to prevent early blight fungal spores.`;
+    fertilizer = `Apply Calcium Nitrate (5g/L) to prevent blossom end rot during fruiting.`;
+    pest_control = `Watch for whiteflies and leaf miners. Install yellow sticky traps and spray Imidacloprid if needed.`;
   }
 
   return {

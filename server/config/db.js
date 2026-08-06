@@ -51,7 +51,6 @@ export async function query(sql, params = []) {
     return { rows: res.rows, rowCount: res.rowCount, lastID: res.rows[0]?.id };
   } 
   else if (engine === 'supabase') {
-    // Perform query via Supabase REST API or SQLite fallback if table missing
     try {
       const cleanSql = sql.trim();
       const lowerSql = cleanSql.toLowerCase();
@@ -86,7 +85,6 @@ export async function query(sql, params = []) {
           return { rows: data || [], rowCount: data ? data.length : 0 };
         }
         else if (lowerSql.includes('from machinery')) {
-          let builder = supabase.from('machinery').select('*').eq('availability', true);
           if (cleanSql.includes('WHERE id =')) {
             const { data, error } = await supabase.from('machinery').select('*').eq('id', params[0]);
             if (error) throw error;
@@ -96,8 +94,12 @@ export async function query(sql, params = []) {
             const { count, error } = await supabase.from('machinery').select('*', { count: 'exact', head: true });
             return { rows: [{ count: count || 0 }], rowCount: 1 };
           }
-          if (params.length === 1) builder = builder.eq('type', params[0]);
-          else if (params.length === 2) builder = builder.eq('type', params[0]).ilike('location', `%${params[1]}%`);
+          let builder = supabase.from('machinery').select('*').eq('availability', true);
+          if (params.length === 1 && params[0] !== 'All') builder = builder.eq('type', params[0]);
+          else if (params.length === 2) {
+            if (params[0] !== 'All') builder = builder.eq('type', params[0]);
+            builder = builder.ilike('location', `%${params[1]}%`);
+          }
           const { data, error } = await builder.order('id', { ascending: false });
           if (error) throw error;
           return { rows: data || [], rowCount: data ? data.length : 0 };
@@ -192,7 +194,14 @@ export async function query(sql, params = []) {
           return { rows: data || [], rowCount: 1, lastID: data?.[0]?.id };
         }
         else if (lowerSql.includes('into calendar_events')) {
-          const { data, error } = await supabase.from('calendar_events').insert([{ user_id: params[0], title: params[1], date: params[2], type: params[3], status: params[4] || 'pending', description: params[5] || '' }]).select();
+          // Handle 5 vs 6 params correctly (user_id, title, date, type, description) OR (user_id, title, date, type, status, description)
+          let eventObj;
+          if (params.length === 5) {
+            eventObj = { user_id: params[0], title: params[1], date: params[2], type: params[3], status: 'pending', description: params[4] };
+          } else {
+            eventObj = { user_id: params[0], title: params[1], date: params[2], type: params[3], status: params[4] || 'pending', description: params[5] || '' };
+          }
+          const { data, error } = await supabase.from('calendar_events').insert([eventObj]).select();
           if (error) throw error;
           return { rows: data || [], rowCount: 1, lastID: data?.[0]?.id };
         }
@@ -269,7 +278,6 @@ export async function query(sql, params = []) {
         }
       }
 
-      // Fallback
       return { rows: [], rowCount: 0 };
     } catch (err) {
       console.error('[Supabase Query Error]', err.message);
