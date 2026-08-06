@@ -70,6 +70,17 @@ export async function createMachine(req, res) {
   }
 }
 
+export async function deleteMachine(req, res) {
+  try {
+    const { id } = req.params;
+    await query('DELETE FROM machinery WHERE id = ?', [id]);
+    return res.json({ message: 'Machinery listing deleted successfully' });
+  } catch (err) {
+    console.error('deleteMachine error:', err);
+    return res.status(500).json({ error: 'Failed to delete machinery listing' });
+  }
+}
+
 export async function bookMachine(req, res) {
   try {
     const parseResult = bookMachineSchema.safeParse(req.body);
@@ -140,12 +151,13 @@ export async function cancelBooking(req, res) {
     const { id } = req.params;
     const userId = req.user.id;
 
+    // Delete the booking record entirely
     await query(
-      "UPDATE machine_bookings SET status = 'cancelled' WHERE id = ? AND user_id = ?",
+      "DELETE FROM machine_bookings WHERE id = ? AND user_id = ?",
       [id, userId]
     );
 
-    return res.json({ message: 'Machinery booking cancelled successfully' });
+    return res.json({ message: 'Machinery booking cancelled and removed successfully' });
   } catch (err) {
     console.error('cancelBooking error:', err);
     return res.status(500).json({ error: 'Failed to cancel booking' });

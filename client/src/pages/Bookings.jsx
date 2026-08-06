@@ -30,7 +30,8 @@ export default function Bookings() {
     if (!window.confirm('Cancel this machinery booking?')) return;
     try {
       await api.delete(`/machines/book/${id}`);
-      fetchBookings();
+      // Remove from local state immediately so it disappears
+      setMachineBookings(prev => prev.filter(b => b.id !== id));
     } catch (err) {
       alert('Failed to cancel booking.');
     }

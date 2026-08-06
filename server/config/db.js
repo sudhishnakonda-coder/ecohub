@@ -235,16 +235,12 @@ export async function query(sql, params = []) {
 
         if (lowerSql.includes('into calendar_events')) {
           let eventObj;
-          // Detect if 5-param call (user_id, title, date, type, description) or 6-param call (with status)
           if (params.length === 5) {
             eventObj = { user_id: params[0], title: params[1], date: params[2], type: params[3], status: 'pending', description: params[4] };
           } else {
-            // 6 params: user_id, title, date, type, description|status, status|description
-            // Check the SQL to determine order: (user_id, title, date, type, description, status) vs (user_id, title, date, type, status, description)
             if (lowerSql.includes('type, description, status')) {
               eventObj = { user_id: params[0], title: params[1], date: params[2], type: params[3], description: params[4] || '', status: params[5] || 'pending' };
             } else {
-              // Default: (user_id, title, date, type, status, description)
               eventObj = { user_id: params[0], title: params[1], date: params[2], type: params[3], status: params[4] || 'pending', description: params[5] || '' };
             }
           }
@@ -361,6 +357,44 @@ export async function query(sql, params = []) {
             .delete().eq('id', params[0]).eq('user_id', params[1]).select();
           if (error) throw error;
           return { rows: data || [], rowCount: data ? data.length : 0 };
+        }
+
+        if (lowerSql.includes('from farms')) {
+          let builder = supabase.from('farms').delete().eq('id', params[0]);
+          if (params.length > 1) builder = builder.eq('user_id', params[1]);
+          const { data, error } = await builder.select();
+          if (error) throw error;
+          return { rows: data || [], rowCount: 1 };
+        }
+
+        if (lowerSql.includes('from machinery')) {
+          const { data, error } = await supabase.from('machinery')
+            .delete().eq('id', params[0]).select();
+          if (error) throw error;
+          return { rows: data || [], rowCount: 1 };
+        }
+
+        if (lowerSql.includes('from cold_storages')) {
+          const { data, error } = await supabase.from('cold_storages')
+            .delete().eq('id', params[0]).select();
+          if (error) throw error;
+          return { rows: data || [], rowCount: 1 };
+        }
+
+        if (lowerSql.includes('from machine_bookings')) {
+          let builder = supabase.from('machine_bookings').delete().eq('id', params[0]);
+          if (params.length > 1) builder = builder.eq('user_id', params[1]);
+          const { data, error } = await builder.select();
+          if (error) throw error;
+          return { rows: data || [], rowCount: 1 };
+        }
+
+        if (lowerSql.includes('from storage_bookings')) {
+          let builder = supabase.from('storage_bookings').delete().eq('id', params[0]);
+          if (params.length > 1) builder = builder.eq('user_id', params[1]);
+          const { data, error } = await builder.select();
+          if (error) throw error;
+          return { rows: data || [], rowCount: 1 };
         }
       }
 

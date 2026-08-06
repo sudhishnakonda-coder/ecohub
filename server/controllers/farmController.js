@@ -44,3 +44,15 @@ export async function createFarm(req, res) {
     return res.status(500).json({ error: 'Failed to create farm profile' });
   }
 }
+
+export async function deleteFarm(req, res) {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    await query('DELETE FROM farms WHERE id = ? AND user_id = ?', [id, userId]);
+    return res.json({ message: 'Farm deleted successfully' });
+  } catch (err) {
+    console.error('deleteFarm error:', err);
+    return res.status(500).json({ error: 'Failed to delete farm' });
+  }
+}

@@ -64,6 +64,17 @@ export async function createColdStorage(req, res) {
   }
 }
 
+export async function deleteColdStorage(req, res) {
+  try {
+    const { id } = req.params;
+    await query('DELETE FROM cold_storages WHERE id = ?', [id]);
+    return res.json({ message: 'Cold storage facility deleted successfully' });
+  } catch (err) {
+    console.error('deleteColdStorage error:', err);
+    return res.status(500).json({ error: 'Failed to delete cold storage facility' });
+  }
+}
+
 export async function bookColdStorage(req, res) {
   try {
     const parseResult = bookStorageSchema.safeParse(req.body);

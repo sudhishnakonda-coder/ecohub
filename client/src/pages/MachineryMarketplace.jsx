@@ -116,6 +116,16 @@ export default function MachineryMarketplace() {
     }
   };
 
+  const handleDeleteMachine = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to delete "${name}" from Machinery Marketplace?`)) return;
+    try {
+      await api.delete(`/machines/${id}`);
+      setMachines((prev) => prev.filter((m) => m.id !== id));
+    } catch (err) {
+      alert('Failed to delete machine listing.');
+    }
+  };
+
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
@@ -196,6 +206,7 @@ export default function MachineryMarketplace() {
               imageUrl={machine.image_url}
               availability={Boolean(machine.availability)}
               onBook={() => setBookingMachine(machine)}
+              onDelete={() => handleDeleteMachine(machine.id, machine.machine_name)}
             />
           ))
         ) : (

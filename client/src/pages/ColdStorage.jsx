@@ -108,6 +108,16 @@ export default function ColdStorage() {
     }
   };
 
+  const handleDeleteStorage = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to delete "${name}" from Cold Storage Network?`)) return;
+    try {
+      await api.delete(`/cold-storage/${id}`);
+      setStorages((prev) => prev.filter((s) => s.id !== id));
+    } catch (err) {
+      alert('Failed to delete cold storage facility.');
+    }
+  };
+
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
@@ -171,6 +181,7 @@ export default function ColdStorage() {
               imageUrl={storage.image_url}
               availability={Number(storage.available_capacity ?? storage.capacity) > 0}
               onBook={() => setBookingStorage(storage)}
+              onDelete={() => handleDeleteStorage(storage.id, storage.name)}
               buttonText="Reserve Space"
             />
           ))

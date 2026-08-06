@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Sprout, MapPin, Phone, Mail, Plus, Check } from 'lucide-react';
+import { User, Sprout, MapPin, Phone, Mail, Plus, Trash2 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -42,6 +42,16 @@ export default function Profile() {
       fetchFarms();
     } catch (err) {
       alert('Failed to create farm profile.');
+    }
+  };
+
+  const handleDeleteFarm = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this farm plot?')) return;
+    try {
+      await api.delete(`/farms/${id}`);
+      setFarms((prev) => prev.filter((f) => f.id !== id));
+    } catch (err) {
+      alert('Failed to delete farm plot.');
     }
   };
 
@@ -174,9 +184,19 @@ export default function Profile() {
                       Crop: <strong className="text-emerald-400">{f.crop}</strong> &bull; Soil: {f.soil_type} &bull; Stage: {f.crop_stage}
                     </p>
                   </div>
-                  <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">
-                    Active Plot
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">
+                      Active Plot
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteFarm(f.id)}
+                      title="Delete Farm Plot"
+                      className="p-1.5 rounded-xl bg-red-950/60 hover:bg-red-900/80 border border-red-500/40 text-red-400 transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               ))
             ) : (

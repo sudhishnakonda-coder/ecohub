@@ -1,9 +1,21 @@
 import React from 'react';
-import { MapPin, DollarSign, Calendar, ShieldCheck, Tag } from 'lucide-react';
+import { MapPin, DollarSign, Calendar, ShieldCheck, Tag, Trash2 } from 'lucide-react';
 
-export default function BookingCard({ title, subtitle, location, price, priceUnit = '/day', type, imageUrl, availability, onBook, buttonText = 'Book Now' }) {
+export default function BookingCard({
+  title,
+  subtitle,
+  location,
+  price,
+  priceUnit = '/day',
+  type,
+  imageUrl,
+  availability,
+  onBook,
+  onDelete,
+  buttonText = 'Book Now'
+}) {
   return (
-    <div className="glass-panel rounded-2xl overflow-hidden glass-panel-hover flex flex-col justify-between group">
+    <div className="glass-panel rounded-2xl overflow-hidden glass-panel-hover flex flex-col justify-between group relative">
       <div>
         <div className="relative h-44 w-full overflow-hidden bg-slate-900">
           <img
@@ -11,12 +23,25 @@ export default function BookingCard({ title, subtitle, location, price, priceUni
             alt={title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
-          <div className="absolute top-3 right-3">
+          <div className="absolute top-3 right-3 flex items-center space-x-2">
             <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase shadow-lg ${
               availability === false ? 'bg-red-500/80 text-white' : 'bg-emerald-500/90 text-slate-950'
             }`}>
               {availability === false ? 'Booked' : 'Available'}
             </span>
+            {onDelete && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                title="Delete Listing"
+                className="p-1.5 rounded-full bg-slate-950/80 hover:bg-red-900/90 text-red-400 hover:text-white border border-red-500/40 transition-colors shadow-lg"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
           </div>
           {type && (
             <div className="absolute bottom-3 left-3">
