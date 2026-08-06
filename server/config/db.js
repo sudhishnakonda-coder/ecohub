@@ -410,13 +410,13 @@ export async function query(sql, params = []) {
     // ──────── SQLite Engine ────────
     const lowerSql = sql.trim().toLowerCase();
     if (lowerSql.startsWith('select') || lowerSql.includes('returning')) {
-      let cleanSql = sql.replace(/RETURNING\s+\*/i, '').replace(/RETURNING\s+id/i, '');
+      let cleanSql = sql.replace(/RETURNING\s+.*/i, '').trim();
       if (lowerSql.startsWith('select')) {
         const rows = await client.all(cleanSql, params);
         return { rows, rowCount: rows.length };
       } else {
         const res = await client.run(cleanSql, params);
-        if (sql.includes('RETURNING')) {
+        if (/RETURNING/i.test(sql)) {
           const tableName = cleanSql.toLowerCase().includes('into users') ? 'users' :
                             cleanSql.toLowerCase().includes('into farms') ? 'farms' :
                             cleanSql.toLowerCase().includes('into calendar_events') ? 'calendar_events' :
