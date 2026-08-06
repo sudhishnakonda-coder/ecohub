@@ -3,10 +3,12 @@
   "version": "1.0.0",
   "description": "EcoHub - AI Sustainable Farm Management Platform",
   "scripts": {
+    "postinstall": "cd client && npm install && cd ../server && npm install",
+    "build": "cd client && npm install && npm run build",
+    "vercel-build": "cd client && npm install && npm run build",
     "server": "npm --prefix server start",
     "server:dev": "npm --prefix server run dev",
-    "client": "npm --prefix client dev",
-    "build": "npm --prefix client run build",
+    "client": "npm --prefix client run dev",
     "seed": "npm --prefix server run seed"
   }
 }
