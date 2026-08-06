@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Leaf, Lock, Mail, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Leaf, Lock, Mail, ArrowRight, ShieldCheck, Zap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
-  const [email, setEmail] = useState('farmer@ecohub.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -20,6 +20,19 @@ export default function Login() {
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to login. Please check credentials.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      await login('farmer@ecohub.com', 'password123');
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Guest login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -53,6 +66,26 @@ export default function Login() {
               {error}
             </div>
           )}
+
+          {/* Guest Login Button — Prominent for Hackathon Demo */}
+          <button
+            type="button"
+            onClick={handleGuestLogin}
+            disabled={loading}
+            className="w-full flex justify-center items-center space-x-2 py-3.5 px-4 mb-6 rounded-xl text-sm font-extrabold text-slate-950 bg-gradient-to-r from-amber-400 to-orange-300 hover:from-amber-300 hover:to-orange-200 shadow-lg shadow-amber-950/50 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all transform hover:scale-[1.02] animate-pulse hover:animate-none"
+          >
+            <Zap className="h-5 w-5" />
+            <span>🚀 Quick Demo Login (Guest)</span>
+          </button>
+
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-emerald-900/40"></div>
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="px-3 bg-slate-900 text-slate-400 font-medium">or sign in with email</span>
+            </div>
+          </div>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
@@ -104,6 +137,13 @@ export default function Login() {
               )}
             </button>
           </form>
+
+          {/* Demo Credentials Info */}
+          <div className="mt-4 p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/20 text-center">
+            <p className="text-[10px] text-emerald-300 font-bold uppercase tracking-widest mb-1">Demo Credentials</p>
+            <p className="text-xs text-slate-300">Email: <strong className="text-white">farmer@ecohub.com</strong></p>
+            <p className="text-xs text-slate-300">Password: <strong className="text-white">password123</strong></p>
+          </div>
 
           <div className="mt-6 pt-6 border-t border-emerald-900/30 text-center">
             <p className="text-xs text-slate-400">
