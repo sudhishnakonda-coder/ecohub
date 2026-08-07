@@ -80,10 +80,19 @@ export default function AIAdvisor() {
 
       setMessages(prev => [...prev, aiMessage]);
     } catch (err) {
+      let errorContent = "I'm sorry, I encountered an error processing your question. Please try again in a moment. 🙏";
+
+      // Check for quota exhausted (429)
+      if (err.response && err.response.status === 429) {
+        errorContent = "⚠️ **Gemini AI API credits are finished!**\n\nThe AI service has run out of free credits. To fix this:\n\n• Go to https://aistudio.google.com/apikey\n• Create a new free API key\n• Update the GEMINI_API_KEY in the server .env file\n• Restart the server\n\nThe chat will work again with a fresh API key!";
+      } else if (err.response && err.response.data && err.response.data.message) {
+        errorContent = err.response.data.message;
+      }
+
       const errorMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: "I'm sorry, I encountered an error processing your question. Please try again in a moment. 🙏",
+        content: errorContent,
         timestamp: new Date().toISOString(),
         isError: true
       };
