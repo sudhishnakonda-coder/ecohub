@@ -20,6 +20,7 @@
 .glass-panel-hover {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .glass-panel-hover:hover {
   border-color: rgba(16, 185, 129, 0.4);
   box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.2);
@@ -35,13 +36,16 @@
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: #09120c;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #10b98144;
   border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: #10b981aa;
 }
@@ -51,4 +55,35 @@
   border-radius: 0.75rem;
   overflow: hidden;
   z-index: 10;
+}
+
+/* Custom Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spinSlow {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-spin-slow {
+  animation: spinSlow 4s linear infinite;
 }

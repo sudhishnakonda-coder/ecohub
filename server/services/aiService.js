@@ -1,5 +1,88 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+const AGRICULTURE_SYSTEM_PROMPT = `You are Dr. AgroBot, a senior-most agriculture scientist with 40+ years of research and field experience across agronomy, soil science, plant pathology, entomology, horticulture, and sustainable farming. You have worked with ICAR, FAO, and leading agricultural universities worldwide.
+
+Your role:
+- Answer ALL agriculture-related questions with expert, detailed, practical advice
+- Cover topics like crop management, soil health, irrigation, fertilizers, pest/disease control, organic farming, post-harvest handling, weather impact, market trends, and sustainable practices
+- Provide actionable recommendations that farmers can immediately apply
+- Use simple language that farmers can understand, but include scientific reasoning when helpful
+- If the question is NOT related to agriculture/farming, politely redirect the user back to agriculture topics
+- Always be helpful, encouraging, and supportive of farmers
+
+Format your responses clearly with short paragraphs. Use bullet points for lists. Keep responses concise but thorough.`;
+
+export async function chatWithGemini(userMessage, conversationHistory = []) {
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  // Build the chat contents for Gemini
+  const contents = [];
+
+  // Add conversation history
+  for (const msg of conversationHistory) {
+    contents.push({
+      role: msg.role === 'user' ? 'user' : 'model',
+      parts: [{ text: msg.content }]
+    });
+  }
+
+  // Add the new user message
+  contents.push({
+    role: 'user',
+    parts: [{ text: userMessage }]
+  });
+
+  if (apiKey && apiKey.trim() !== '' && !apiKey.startsWith('AQ.')) {
+    const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+    for (const modelName of modelsToTry) {
+      try {
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          systemInstruction: AGRICULTURE_SYSTEM_PROMPT
+        });
+
+        const chat = model.startChat({
+          history: contents.slice(0, -1),
+        });
+
+        const result = await chat.sendMessage(userMessage);
+        const responseText = result.response.text();
+
+        if (responseText && responseText.trim()) {
+          return { reply: responseText.trim(), model: modelName };
+        }
+      } catch (err) {
+        console.warn(`[AI Chat] Model ${modelName} error:`, err.message);
+      }
+    }
+  }
+
+  // Fallback response
+  return {
+    reply: getFallbackChatReply(userMessage),
+    model: 'fallback'
+  };
+}
+
+function getFallbackChatReply(question) {
+  const q = question.toLowerCase();
+
+  if (q.includes('fertilizer') || q.includes('npk') || q.includes('nutrient')) {
+    return `Great question about fertilizers! Here's my advice:\n\n• For most cereal crops (wheat, rice, maize), a balanced NPK ratio of 4:2:1 works well\n• Apply nitrogen in split doses — 50% as basal, 25% at tillering, 25% at panicle initiation\n• Always supplement with organic manure (FYM at 10 tonnes/ha or vermicompost at 5 tonnes/ha)\n• Get your soil tested every season to fine-tune the dosage\n• Consider foliar sprays of micronutrients (Zinc, Boron) during critical growth stages\n\nWould you like specific fertilizer recommendations for a particular crop?`;
+  }
+
+  if (q.includes('pest') || q.includes('insect') || q.includes('disease') || q.includes('fungus')) {
+    return `Pest and disease management is crucial! Here's my integrated approach:\n\n• **Prevention first**: Use resistant varieties, practice crop rotation, and maintain field hygiene\n• **Biological control**: Encourage natural predators — Trichogramma cards for borers, ladybugs for aphids\n• **Organic sprays**: Neem oil (5ml/L), Pseudomonas fluorescens for fungal diseases\n• **Chemical control (last resort)**: Use targeted pesticides at recommended doses, follow the waiting period before harvest\n• **Monitoring**: Install pheromone traps and yellow sticky traps for early detection\n\nTell me which crop and pest you're dealing with for specific advice!`;
+  }
+
+  if (q.includes('irrigation') || q.includes('water') || q.includes('drip')) {
+    return `Smart irrigation can save 30-50% water! Here's what I recommend:\n\n• **Drip irrigation**: Best for vegetables, fruits, and row crops — delivers water directly to roots\n• **Critical stages**: Never skip irrigation during flowering and grain filling stages\n• **Timing**: Early morning (6-8 AM) is ideal to minimize evaporation\n• **Soil moisture**: Irrigate when soil moisture drops below 50% of field capacity\n• **Mulching**: Apply 5-7 cm organic mulch to reduce evaporation by 25-30%\n\nWhat crop are you growing? I can give you a tailored irrigation schedule!`;
+  }
+
+  return `Thank you for your question! As a senior agriculture scientist, I'd be happy to help.\n\nHere are some general recommendations:\n\n• **Soil Health**: Regular soil testing and organic matter addition is the foundation of good farming\n• **Crop Selection**: Choose varieties suited to your local climate and soil type\n• **Water Management**: Adopt micro-irrigation (drip/sprinkler) for efficient water use\n• **Integrated Pest Management**: Combine biological, cultural, and chemical methods\n• **Post-Harvest**: Proper drying and storage can reduce losses by 15-20%\n\nPlease ask me specific questions about your crops, soil, pests, or any farming challenge — I'm here to help! 🌱`;
+}
+
 export async function generateCropRecommendation({ crop, location, soil_type, crop_stage, weather }) {
   const apiKey = process.env.GEMINI_API_KEY;
 
